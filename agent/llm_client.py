@@ -1,8 +1,21 @@
-"""Thin wrapper around an LLM provider (mocked for demo)."""
+"""Thin wrapper around an LLM provider with OpenAI support."""
 
+from __future__ import annotations
+
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
+
+from config import settings
+
+try:
+    from openai import OpenAI
+except Exception:  # pragma: no cover - optional dependency
+    OpenAI = None
+
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -13,19 +26,48 @@ class Message:
 
 
 class LLMClient:
-    """Mock LLM client that emits simple Korean summaries/answers."""
+    """LLM client that prefers OpenAI but falls back to a mock response."""
+
+    def __init__(self) -> None:
+        self._provider = settings.LLM_PROVIDER.lower()
+        self._client = None
+        if self._provider == "openai" and settings.OPENAI_API_KEY and OpenAI:
+            print(settings.OPENAI_API_KEY)
+            self._client = OpenAI(api_key=settings.OPENAI_API_KEY)
+        if self._client is None:
+            logger.warning(
+                "실제 LLM 자격 증명이 없거나 openai 패키지를 찾을 수 없어 목업 응답으로 대체합니다."
+            )
 
     def complete(self, messages: List[Message]) -> str:
-        last_user = _latest_user_message(messages)
-        if last_user is None:
-            return "대화 내용이 없습니다."
+        if self._client:
+            try:
+                response = self._client.chat.completions.create(
+                    model=settings.OPENAI_MODEL,
+                    temperature=settings.LLM_TEMPERATURE,
+                    messages=[{"role": msg.role, "content": msg.content} for msg in messages],
+                )
+                choice = response.choices[0]
+                content = (choice.message.content or "").strip()
+                if content:
+                    return content
+            except Exception as exc:  # pragma: no cover - network failure
+                logger.exception("LLM 호출이 실패했습니다. 목업 응답으로 대체합니다: %s", exc)
 
-        content = last_user.content
-        if "Event type:" in content and "Symbol:" in content:
-            info = _parse_event_prompt(content)
-            return _format_event_summary(info)
+        return _mock_response(messages)
 
-        return _format_question_response(content, messages)
+
+def _mock_response(messages: List[Message]) -> str:
+    last_user = _latest_user_message(messages)
+    if last_user is None:
+        return "대화 내용이 충분하지 않습니다."
+
+    content = last_user.content
+    if "Event type:" in content and "Symbol:" in content:
+        info = _parse_event_prompt(content)
+        return _format_event_summary(info)
+
+    return _format_question_response(content, messages)
 
 
 def _latest_user_message(messages: List[Message]) -> Optional[Message]:

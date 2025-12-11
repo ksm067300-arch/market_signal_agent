@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import argparse
-
 import logging
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from agent.analysis_agent import AnalysisAgent
 from agent.context import ConversationContext

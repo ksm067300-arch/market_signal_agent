@@ -53,13 +53,16 @@ def launch_gradio(orchestrator: Orchestrator) -> None:
         return combined, len(lines)
 
     def _handle_question(
-        question: str, history: list[tuple[str, str]]
-    ) -> tuple[list[tuple[str, str]], str]:
+        question: str, history: list[dict]
+    ) -> tuple[list[dict], str]:
         question = (question or "").strip()
         if not question:
             return history, ""
         answer = orchestrator.answer_follow_up(question)
-        updated_history = history + [(question, answer)]
+        updated_history = history + [
+            {"role": "user", "content": question},
+            {"role": "assistant", "content": answer},
+        ]
         return updated_history, ""
 
     with gr.Blocks(title="Market Signal Agent") as demo:

@@ -1,5 +1,6 @@
 """Central configuration for market_signal_agent demo."""
 
+import os
 from datetime import timedelta
 
 # Symbols to monitor. Multiple pairs are supported.
@@ -21,3 +22,9 @@ VOLUME_SPIKE_MULTIPLIER = 1.3
 
 # Context TTL for reusing LLM outputs.
 SUMMARY_CACHE_TTL = timedelta(minutes=5)
+
+# LLM provider configuration (default: OpenAI).
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "openai")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.3"))
