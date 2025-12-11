@@ -37,8 +37,8 @@ def launch_gradio(orchestrator: Orchestrator) -> None:
         return history_text, status, len(lines)
 
     def _clear_history() -> tuple[str, int]:
-        length = len(orchestrator.history_lines())
-        return "", length
+        orchestrator.clear_history()
+        return "", 0
 
     def _poll_history(
         current_text: str, last_index: int

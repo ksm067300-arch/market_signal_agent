@@ -70,6 +70,12 @@ class Orchestrator:
         with self._history_lock:
             return list(self._history)
 
+    def clear_history(self) -> None:
+        with self._history_lock:
+            self._history.clear()
+        self._latest_event = None
+        self._latest_summary = None
+
     def history_lines(self) -> List[str]:
         with self._history_lock:
             return [self._format_event_line(event, summary) for event, summary in self._history]
