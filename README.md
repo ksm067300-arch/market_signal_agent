@@ -33,7 +33,7 @@ Gradio UI에서 `최신 이벤트 가져오기`를 누르면 워처가 시작되
 실제 OpenAI 모델을 사용하려면 `.env`에 다음 값을 설정하세요.
 
 ```
-OPENAI_API_KEY=sk-...
+OPENAI_API_KEY=...-...
 OPENAI_MODEL=gpt-4o-mini      # (선택) 기본값 유지 가능
 LLM_TEMPERATURE=0.3           # (선택)
 ```
