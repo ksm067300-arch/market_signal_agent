@@ -14,7 +14,12 @@ def prompt_follow_up(orchestrator: Orchestrator) -> None:
                 break
             if not question:
                 break
-            response = orchestrator.answer_follow_up(question)
-            print(f"\nAgent response:\n{response}")
+            print("\nAgent response:\n", end="", flush=True)
+            try:
+                for chunk in orchestrator.answer_follow_up_stream(question):
+                    print(chunk, end="", flush=True)
+                print()
+            except KeyboardInterrupt:
+                print("\nStreaming interrupted by user.")
     except KeyboardInterrupt:
         print("\nStopping Q&A session.")

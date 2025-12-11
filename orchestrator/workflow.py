@@ -84,8 +84,14 @@ class Orchestrator:
         return self._latest_event
 
     def answer_follow_up(self, question: str) -> str:
+        chunks = []
+        for chunk in self.answer_follow_up_stream(question):
+            chunks.append(chunk)
+        return "".join(chunks).strip()
+
+    def answer_follow_up_stream(self, question: str):
         enriched_question = self._inject_history(question)
-        return self._analyst.answer_question(enriched_question)
+        yield from self._analyst.answer_question_stream(enriched_question)
 
     def _inject_history(self, question: str) -> str:
         lines = self.history_lines()

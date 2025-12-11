@@ -1,6 +1,7 @@
 """Analysis and Q&A agent that leverages LLM summaries."""
 
 from datetime import datetime
+from typing import Iterator
 
 from agent.context import ConversationContext
 from agent.llm_client import LLMClient, Message
@@ -32,9 +33,20 @@ class AnalysisAgent:
         return summary
 
     def answer_question(self, question: str) -> str:
-        messages = self._context.history() + [
-            Message(role="user", content=question, timestamp=datetime.utcnow())
-        ]
-        answer = self._llm.complete(messages)
-        self._context.add(Message(role="assistant", content=answer, timestamp=datetime.utcnow()))
-        return answer
+        chunks = []
+        for chunk in self.answer_question_stream(question):
+            chunks.append(chunk)
+        return "".join(chunks).strip()
+
+    def answer_question_stream(self, question: str) -> Iterator[str]:
+        user_prompt = Message(role="user", content=question, timestamp=datetime.utcnow())
+        messages = self._context.history() + [user_prompt]
+        buffer: list[str] = []
+        for chunk in self._llm.stream_complete(messages):
+            buffer.append(chunk)
+            yield chunk
+
+        full_answer = "".join(buffer).strip()
+        self._context.add(
+            Message(role="assistant", content=full_answer, timestamp=datetime.utcnow())
+        )

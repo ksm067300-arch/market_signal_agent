@@ -54,19 +54,28 @@ def launch_gradio(orchestrator: Orchestrator) -> None:
 
     def _handle_question(
         question: str, history: list[dict]
-    ) -> tuple[list[dict], str]:
+    ):
         question = (question or "").strip()
+        history = history or []
         if not question:
-            return history, ""
-        answer = orchestrator.answer_follow_up(question)
-        updated_history = history + [
-            {"role": "user", "content": question},
-            {"role": "assistant", "content": answer},
-        ]
-        return updated_history, ""
+            yield history, ""
+            return
+
+        updated_history = history + [{"role": "user", "content": question}]
+        assistant_entry = {"role": "assistant", "content": ""}
+        updated_history.append(assistant_entry)
+        yield updated_history, ""
+
+        buffer = ""
+        for chunk in orchestrator.answer_follow_up_stream(question):
+            buffer += chunk
+            assistant_entry["content"] = buffer
+            yield updated_history, ""
+
+        yield updated_history, ""
 
     with gr.Blocks(title="Market Signal Agent") as demo:
-        gr.Markdown("## 실시간 마켓 이벤트 요약 + Q&A")
+        gr.Markdown("## MARKET SIGNAL AGENT")
 
         with gr.Row():
             drop_input = gr.Number(
@@ -94,9 +103,9 @@ def launch_gradio(orchestrator: Orchestrator) -> None:
         history_index = gr.State(0)
 
         with gr.Row():
-            start_button = gr.Button("최신 이벤트 가져오기")
-            stop_button = gr.Button("요약 가져오기 중지", variant="stop")
-            clear_button = gr.Button("로그 지우기")
+            start_button = gr.Button("Start")
+            stop_button = gr.Button("Stop", variant="stop")
+            clear_button = gr.Button("Clear")
 
         start_button.click(
             fn=_start_and_fetch,
@@ -125,7 +134,7 @@ def launch_gradio(orchestrator: Orchestrator) -> None:
             queue=False,
         )
 
-        gr.Markdown("### 후속 질문")
+        gr.Markdown("토큰 소모를 줄이기 위해 최근 5개의 이벤트 히스토리만 참조합니다. 질문은 아래에 입력하세요.")
         chat_history = gr.Chatbot(label="대화 로그", height=300)
         prompt_box = gr.Textbox(label="질문 입력", placeholder="예) 이게 단기 조정인가요?")
         ask_button = gr.Button("질문 보내기")
