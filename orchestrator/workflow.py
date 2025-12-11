@@ -1,21 +1,22 @@
-"""Orchestrator connecting the watcher and analysis/Q&A agent."""
+"""Orchestrator connecting the watcher and QA agent."""
 
 from __future__ import annotations
 
 import threading
+from datetime import timedelta
 from typing import List, Optional, Tuple
 
-from agent.analysis_agent import AnalysisAgent
+from agent.qa_agent import QaAgent
 from watcher.agent import MarketWatcherAgent
 from watcher.models import Event
 
 
 class Orchestrator:
-    """Manages event generation and analysis/Q&A flow."""
+    """Manages event generation and Q&A flow."""
 
-    def __init__(self, watcher: MarketWatcherAgent, analyst: AnalysisAgent):
+    def __init__(self, watcher: MarketWatcherAgent, qa_agent: QaAgent):
         self._watcher = watcher
-        self._analyst = analyst
+        self._qa_agent = qa_agent
         self._latest_event: Optional[Event] = None
         self._latest_summary: Optional[str] = None
         self._history: List[Tuple[Event, str]] = []
@@ -24,15 +25,15 @@ class Orchestrator:
         self._stop_signal: Optional[threading.Event] = None
 
     def run_once(self) -> Optional[str]:
-        """Run watcher until the next event is available, then summarize."""
+        """Run watcher until the next event is available, then log it."""
         event = next(self._watcher.watch())
+        summary = self._build_event_summary(event)
         self._latest_event = event
-        self._latest_summary = self._analyst.summarize_event(event)
-        self._record_history(event, self._latest_summary)
-        return self._latest_summary
+        self._latest_summary = summary
+        self._record_history(event, summary)
+        return summary
 
     def start(self) -> None:
-        """Start streaming events in the background until stopped."""
         if self.is_running():
             return
         self._stop_signal = threading.Event()
@@ -42,7 +43,6 @@ class Orchestrator:
         self._watch_thread.start()
 
     def stop(self) -> None:
-        """Stop the background watcher thread."""
         if self._stop_signal:
             self._stop_signal.set()
         if self._watch_thread:
@@ -55,7 +55,7 @@ class Orchestrator:
 
     def _watch_loop(self, stop_signal: threading.Event) -> None:
         for event in self._watcher.watch(stop_event=stop_signal):
-            summary = self._analyst.summarize_event(event)
+            summary = self._build_event_summary(event)
             self._latest_event = event
             self._latest_summary = summary
             self._record_history(event, summary)
@@ -78,7 +78,7 @@ class Orchestrator:
 
     def history_lines(self) -> List[str]:
         with self._history_lock:
-            return [self._format_event_line(event, summary) for event, summary in self._history]
+            return [summary for _, summary in self._history]
 
     def latest_event(self) -> Optional[Event]:
         return self._latest_event
@@ -91,7 +91,7 @@ class Orchestrator:
 
     def answer_follow_up_stream(self, question: str):
         enriched_question = self._inject_history(question)
-        yield from self._analyst.answer_question_stream(enriched_question)
+        yield from self._qa_agent.stream_answer(enriched_question)
 
     def _inject_history(self, question: str) -> str:
         lines = self.history_lines()
@@ -101,11 +101,10 @@ class Orchestrator:
         return f"{history_text}\n\n사용자 질문: {question}"
 
     def summaries_text(self) -> str:
-        lines = self.history_lines()
-        return "\n".join(lines)
+        return "\n".join(self.history_lines())
 
-    def _format_event_line(self, event: Event, summary: str) -> str:
-        timestamp = event.snapshot.timestamp.strftime("%Y-%m-%d %H:%M:%S")
+    def _build_event_summary(self, event: Event) -> str:
+        timestamp = (event.snapshot.timestamp + timedelta(hours=9)).strftime("%Y-%m-%d %H:%M:%S")
         symbol = _format_symbol(event.symbol)
         event_type = event.event_type.value
         change_pct = event.change_metrics.get("price_change_pct")
@@ -117,7 +116,7 @@ class Orchestrator:
             metric_desc = f"거래량이 직전 대비 {volume_mult:.2f}배 증가했습니다."
         else:
             metric_desc = "조건을 충족한 이벤트입니다."
-        return f"[{timestamp}] [{symbol}] [{event_type}] {metric_desc}"
+        return f"[{event_type}] [{timestamp}] [{symbol}] {metric_desc}"
 
 
 def _format_symbol(symbol: str) -> str:

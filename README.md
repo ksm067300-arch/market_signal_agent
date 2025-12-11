@@ -7,7 +7,7 @@
 ```
 config/          # 전역 설정
 watcher/         # 거래소 클라이언트, 트리거 조건, 워처 에이전트
-agent/           # LLM 래퍼, 컨텍스트 저장소, 요약/질의응답 로직
+agent/           # LLM 래퍼, 컨텍스트 저장소, Q&A 에이전트(QaAgent)와 단순 이벤트 포매터
 orchestrator/    # 워처 이벤트와 분석 에이전트 사이의 연결
 interfaces/      # 사용자 인터페이스(CLI 데모)
 main.py          # 전체 흐름을 실행하는 엔트리 포인트
@@ -38,7 +38,7 @@ OPENAI_MODEL=gpt-4o-mini      # (선택) 기본값 유지 가능
 LLM_TEMPERATURE=0.3           # (선택)
 ```
 
-키가 없으면 `agent/llm_client.py`가 자동으로 목업 응답으로 대체합니다. 실제 키가 연결되면 CLI와 Gradio Q&A는 토큰이 생성되는 즉시 스트리밍 형태로 응답을 표시합니다. LLM 컨텍스트에는 최근 이벤트 5개만 포함되므로, 더 많은 정보를 전달하고 싶다면 `orchestrator/workflow.py`의 `_inject_history()`를 조정해주세요.
+키가 없으면 `agent/llm_client.py`가 자동으로 목업 응답으로 대체합니다. 실제 키가 연결되면 CLI와 Gradio Q&A는 토큰이 생성되는 즉시 스트리밍 형태로 응답을 표시합니다. 이벤트 요약 히스토리는 워처가 즉시 생성한 텍스트 로그이며, LLM은 사용자 후속 질문(QaAgent)에만 사용됩니다. LLM 컨텍스트에는 최근 이벤트 5개만 포함되므로, 더 많은 정보를 전달하고 싶다면 `orchestrator/workflow.py`의 `_inject_history()`를 조정해주세요.
 
 `config/settings.py`의 `MARKET_DATA_BACKEND` 값을 통해 다음 모드를 선택할 수 있습니다.
 

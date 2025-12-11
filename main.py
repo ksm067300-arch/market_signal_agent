@@ -9,9 +9,9 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from agent.analysis_agent import AnalysisAgent
 from agent.context import ConversationContext
 from agent.llm_client import LLMClient
+from agent.qa_agent import QaAgent
 from config import settings
 from interfaces.cli import prompt_follow_up
 from orchestrator.workflow import Orchestrator
@@ -32,8 +32,9 @@ def main() -> None:
     args = parse_args()
     watcher = MarketWatcherAgent(settings.SYMBOLS)
     context = ConversationContext(ttl=settings.SUMMARY_CACHE_TTL)
-    analyst = AnalysisAgent(LLMClient(), context)
-    orchestrator = Orchestrator(watcher, analyst)
+    llm = LLMClient()
+    qa_agent = QaAgent(llm, context)
+    orchestrator = Orchestrator(watcher, qa_agent)
 
     if args.gradio:
         from interfaces.gradio_app import launch_gradio

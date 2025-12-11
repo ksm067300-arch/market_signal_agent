@@ -74,7 +74,15 @@ def launch_gradio(orchestrator: Orchestrator) -> None:
 
         yield updated_history, ""
 
-    with gr.Blocks(title="Market Signal Agent") as demo:
+    custom_css = """
+    .gradio-container {
+        max-width: 960px;
+        margin: 0 auto;
+        padding: 0 24px;
+    }
+    """
+
+    with gr.Blocks(title="Market Signal Agent", css=custom_css) as demo:
         gr.Markdown("## MARKET SIGNAL AGENT")
 
         with gr.Row():
