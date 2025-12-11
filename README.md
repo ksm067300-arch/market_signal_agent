@@ -8,7 +8,7 @@
 
 ## 기술 스택
 - **언어/런타임**: Python 3.11  
-- **데이터 소스**: Binance WebSocket/REST (또는 Mokup)  
+- **데이터 소스**: Binance WebSocket/REST (또는 Mockup)  
 - **UI**: Gradio 4 (웹), CLI  
 - **AI**: OpenAI Chat Completions API, python-dotenv  
 - **그 외**: threading, websocket-client, logging
