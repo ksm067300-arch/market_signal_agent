@@ -10,7 +10,7 @@
 - **언어/런타임**: Python 3.11  
 - **데이터 소스**: Binance WebSocket/REST (또는 Mokup)  
 - **UI**: Gradio 4 (웹), CLI  
-- **AI**: OpenAI Chat Completions API (스트리밍), python-dotenv  
+- **AI**: OpenAI Chat Completions API, python-dotenv  
 - **그 외**: threading, websocket-client, logging
 
 ## 프로젝트 구조 및 역할
@@ -33,7 +33,7 @@ main.py            엔트리 포인트
    - CLI: 간단한 이벤트 확인과 스트리밍 응답.  
 5. LLM은 **후속 질문에만** 사용하며, 이벤트 히스토리에는 시그널 5개만 포함해 토큰 사용을 제한.
 
-## 애플리케이션 아키텍처 / 워크플로
+## 어플리케이션 아키텍처
 ```
 ┌──────────┐     WebSocket/REST      ┌────────────┐
 │ settings │ ─────────────────────▶ │ watcher     │
