@@ -4,13 +4,25 @@ from __future__ import annotations
 
 import gradio as gr
 
+from config import settings
 from orchestrator.workflow import Orchestrator
 
 
 def launch_gradio(orchestrator: Orchestrator) -> None:
     """Start a Gradio Blocks app backed by the orchestrator."""
 
-    def _start_and_fetch() -> tuple[str, str, int]:
+    def _apply_thresholds(drop: float, rise: float, volume: float) -> None:
+        if drop is not None and drop > 0:
+            settings.MAX_PERCENT_DROP = drop
+        if rise is not None and rise > 0:
+            settings.MAX_PERCENT_RISE = rise
+        if volume is not None and volume > 0:
+            settings.VOLUME_SPIKE_MULTIPLIER = volume
+
+    def _start_and_fetch(
+        drop: float, rise: float, volume: float
+    ) -> tuple[str, str, int]:
+        _apply_thresholds(drop, rise, volume)
         orchestrator.start()
         lines = orchestrator.history_lines()
         history_text = "\n".join(lines)
@@ -53,6 +65,23 @@ def launch_gradio(orchestrator: Orchestrator) -> None:
     with gr.Blocks(title="Market Signal Agent") as demo:
         gr.Markdown("## 실시간 마켓 이벤트 요약 + Q&A")
 
+        with gr.Row():
+            drop_input = gr.Number(
+                label="가격 하락 트리거 (%)",
+                value=settings.MAX_PERCENT_DROP,
+                precision=4,
+            )
+            rise_input = gr.Number(
+                label="가격 상승 트리거 (%)",
+                value=settings.MAX_PERCENT_RISE,
+                precision=4,
+            )
+            volume_input = gr.Number(
+                label="거래량 배수 트리거",
+                value=settings.VOLUME_SPIKE_MULTIPLIER,
+                precision=2,
+            )
+
         summary_box = gr.Textbox(
             label="이벤트 요약 히스토리",
             placeholder="아직 이벤트가 감지되지 않았습니다.",
@@ -68,7 +97,7 @@ def launch_gradio(orchestrator: Orchestrator) -> None:
 
         start_button.click(
             fn=_start_and_fetch,
-            inputs=None,
+            inputs=[drop_input, rise_input, volume_input],
             outputs=[summary_box, summary_status, history_index],
             queue=False,
         )
