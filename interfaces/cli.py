@@ -1,10 +1,7 @@
-"""Minimal CLI helper to prompt for follow-up questions."""
-
 from orchestrator.workflow import Orchestrator
 
 
 def prompt_follow_up(orchestrator: Orchestrator) -> None:
-    """Ask user for follow-up questions until blank line."""
     try:
         while True:
             try:

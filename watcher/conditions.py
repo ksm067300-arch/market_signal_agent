@@ -1,5 +1,3 @@
-"""Reusable event trigger conditions."""
-
 from typing import Callable, Optional
 
 from config import settings
@@ -11,7 +9,6 @@ Condition = Callable[[MarketSnapshot, MarketSnapshot], Optional[Event]]
 def price_drop_condition(
     current: MarketSnapshot, previous: MarketSnapshot
 ) -> Optional[Event]:
-    """Trigger when current price drops beyond configured threshold."""
     change = current.percent_change(previous)
     if change <= -settings.MAX_PERCENT_DROP:
         return Event(
@@ -27,7 +24,6 @@ def price_drop_condition(
 def price_rise_condition(
     current: MarketSnapshot, previous: MarketSnapshot
 ) -> Optional[Event]:
-    """Trigger when current price rises beyond configured threshold."""
     change = current.percent_change(previous)
     if change >= settings.MAX_PERCENT_RISE:
         return Event(
@@ -43,7 +39,6 @@ def price_rise_condition(
 def volume_spike_condition(
     current: MarketSnapshot, previous: MarketSnapshot
 ) -> Optional[Event]:
-    """Trigger when current volume multiples exceed configured multiplier."""
     multiple = current.volume_ratio(previous)
     if multiple >= settings.VOLUME_SPIKE_MULTIPLIER:
         return Event(

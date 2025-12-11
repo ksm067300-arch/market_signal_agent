@@ -1,5 +1,3 @@
-"""Central configuration for market_signal_agent demo."""
-
 import os
 from datetime import timedelta
 

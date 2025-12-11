@@ -1,5 +1,3 @@
-"""Entry point demonstrating watcher -> analysis -> Q&A flow."""
-
 from __future__ import annotations
 
 import argparse

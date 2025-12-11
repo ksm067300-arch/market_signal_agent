@@ -1,5 +1,3 @@
-"""Conversation and event context store to reduce duplicate LLM calls."""
-
 from collections import deque
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -15,7 +13,6 @@ class ContextEntry:
 
 
 class ConversationContext:
-    """Maintains rolling LLM conversation history with TTL pruning."""
 
     def __init__(self, ttl: timedelta):
         self._ttl = ttl

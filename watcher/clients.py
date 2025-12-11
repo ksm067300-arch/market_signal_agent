@@ -1,5 +1,3 @@
-"""Exchange client abstractions with Binance-backed implementations."""
-
 from __future__ import annotations
 
 import json
@@ -23,8 +21,6 @@ except Exception:  # pragma: no cover - optional dependency
 
 
 class MarketDataClient(Protocol):
-    """Protocol describing the common `stream_ticker` interface."""
-
     def stream_ticker(
         self, symbols: Iterable[str], stop_event: ThreadEvent | None = None
     ) -> Iterator[MarketSnapshot]:
@@ -32,15 +28,12 @@ class MarketDataClient(Protocol):
 
 
 class MockBinanceClient:
-    """Simulates Binance ticker stream, respecting a polling interval."""
-
     def __init__(self, *, poll_interval_seconds: float):
         self._poll_interval = poll_interval_seconds
 
     def stream_ticker(
         self, symbols: Iterable[str], stop_event: ThreadEvent | None = None
     ) -> Iterator[MarketSnapshot]:
-        """Yield pseudo-random ticker updates for given symbols."""
         base_prices = {symbol: 30000.0 for symbol in symbols}
         base_volumes = {symbol: 1000.0 for symbol in symbols}
 
@@ -63,8 +56,6 @@ class MockBinanceClient:
 
 
 class BinanceRestClient:
-    """Simple REST polling client hitting /api/v3/ticker/24hr."""
-
     def __init__(self, *, base_url: str, poll_interval_seconds: float):
         self._base_url = base_url.rstrip("/")
         self._poll_interval = poll_interval_seconds
@@ -72,7 +63,6 @@ class BinanceRestClient:
     def stream_ticker(
         self, symbols: Iterable[str], stop_event: ThreadEvent | None = None
     ) -> Iterator[MarketSnapshot]:
-        """Poll REST ticker endpoints and yield MarketSnapshot objects."""
         while True:
             if stop_event and stop_event.is_set():
                 return
@@ -109,8 +99,6 @@ class BinanceRestClient:
 
 
 class BinanceWebSocketClient:
-    """Streams ticker updates via Binance WebSocket multi-streams."""
-
     def __init__(self, *, stream_base_url: str, reconnect_delay_seconds: float):
         if websocket is None:
             raise RuntimeError(
@@ -123,7 +111,6 @@ class BinanceWebSocketClient:
     def stream_ticker(
         self, symbols: Iterable[str], stop_event: ThreadEvent | None = None
     ) -> Iterator[MarketSnapshot]:
-        """Yield snapshots by listening to `<symbol>@ticker` streams."""
         symbol_list = [symbol.upper() for symbol in symbols]
         stream = "/".join(f"{symbol.lower()}@ticker" for symbol in symbol_list)
         url = f"{self._stream_base_url}?streams={stream}"
@@ -214,7 +201,6 @@ def _event_time_to_datetime(event_time: Optional[int]) -> datetime:
 
 
 def build_default_client() -> MarketDataClient:
-    """Factory helper used by the watcher agent."""
     backend = settings.MARKET_DATA_BACKEND.lower()
 
     if backend == "binance_ws":

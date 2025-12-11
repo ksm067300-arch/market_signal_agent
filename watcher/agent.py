@@ -1,5 +1,3 @@
-"""Market watcher agent that translates ticker data into events."""
-
 from __future__ import annotations
 
 import logging
@@ -14,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 
 class MarketWatcherAgent:
-    """Evaluates incoming market snapshots and emits triggered events."""
+    """거래소 스냅샷을 평가해 트리거 조건을 만족하면 Event를 생성한다."""
 
     def __init__(
         self,
@@ -27,7 +25,7 @@ class MarketWatcherAgent:
         self._conditions = list(conditions) if conditions else list(DEFAULT_CONDITIONS)
 
     def watch(self, stop_event: Optional[ThreadEvent] = None) -> Iterator[Event]:
-        """Stream events as they are triggered."""
+        """클라이언트 스트림을 소비하면서 조건을 만족하는 이벤트를 순차적으로 반환한다."""
         for snapshot in self._client.stream_ticker(self._symbols, stop_event=stop_event):
             if stop_event and stop_event.is_set():
                 break
@@ -60,7 +58,7 @@ class MarketWatcherAgent:
     def _evaluate(
         self, current: MarketSnapshot, previous: MarketSnapshot
     ) -> List[Event]:
-        """Run all configured conditions and collect triggered events."""
+        """등록된 모든 조건을 실행해 Event 리스트를 만든다."""
         events: List[Event] = []
         for condition in self._conditions:
             event = condition(current, previous)

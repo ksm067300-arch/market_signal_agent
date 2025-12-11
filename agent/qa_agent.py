@@ -1,5 +1,3 @@
-"""Agent dedicated to handling Q&A with streaming support."""
-
 from datetime import datetime
 from typing import Iterator
 
@@ -8,7 +6,7 @@ from agent.llm_client import LLMClient, Message
 
 
 class QaAgent:
-    """Streams answers for user questions and updates context."""
+    """후속 질문을 받아 LLM 스트리밍 응답을 반환하고 컨텍스트를 갱신한다."""
 
     def __init__(self, llm_client: LLMClient, context: ConversationContext):
         self._llm = llm_client
@@ -21,6 +19,7 @@ class QaAgent:
         return "".join(chunks).strip()
 
     def stream_answer(self, question: str) -> Iterator[str]:
+        """질문을 LLM으로 전달하고 토큰 단위 응답을 스트리밍한다."""
         user_prompt = Message(role="user", content=question, timestamp=datetime.utcnow())
         messages = self._context.history() + [user_prompt]
         buffer: list[str] = []

@@ -1,5 +1,3 @@
-"""Thin wrapper around an LLM provider with OpenAI support."""
-
 from __future__ import annotations
 
 import logging
@@ -26,7 +24,7 @@ class Message:
 
 
 class LLMClient:
-    """LLM client that prefers OpenAI but falls back to a mock response."""
+    """OpenAI 기반 LLM을 호출하거나 연결이 없을 때 목업 응답을 반환한다."""
 
     def __init__(self) -> None:
         self._provider = settings.LLM_PROVIDER.lower()
@@ -42,6 +40,7 @@ class LLMClient:
         return "".join(self.stream_complete(messages)).strip()
 
     def stream_complete(self, messages: List[Message]):
+        """LLM 스트림을 생성해 토큰을 순차적으로 전달한다."""
         if self._client:
             try:
                 response = self._client.chat.completions.create(

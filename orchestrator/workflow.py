@@ -1,5 +1,3 @@
-"""Orchestrator connecting the watcher and QA agent."""
-
 from __future__ import annotations
 
 import threading
@@ -12,7 +10,7 @@ from watcher.models import Event
 
 
 class Orchestrator:
-    """Manages event generation and Q&A flow."""
+    """Watcher 이벤트를 로그로 변환하고 QaAgent와 UI/CLI를 중개한다."""
 
     def __init__(self, watcher: MarketWatcherAgent, qa_agent: QaAgent):
         self._watcher = watcher
@@ -25,7 +23,7 @@ class Orchestrator:
         self._stop_signal: Optional[threading.Event] = None
 
     def run_once(self) -> Optional[str]:
-        """Run watcher until the next event is available, then log it."""
+        """단일 이벤트를 처리해 요약 문자열을 반환한다."""
         event = next(self._watcher.watch())
         summary = self._build_event_summary(event)
         self._latest_event = event
@@ -90,6 +88,7 @@ class Orchestrator:
         return "".join(chunks).strip()
 
     def answer_follow_up_stream(self, question: str):
+        """최근 히스토리를 포함해 QaAgent 스트림을 호출한다."""
         enriched_question = self._inject_history(question)
         yield from self._qa_agent.stream_answer(enriched_question)
 

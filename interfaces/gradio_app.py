@@ -1,5 +1,3 @@
-"""Gradio UI for monitoring summaries and running follow-up Q&A."""
-
 from __future__ import annotations
 
 import gradio as gr
@@ -9,8 +7,6 @@ from orchestrator.workflow import Orchestrator
 
 
 def launch_gradio(orchestrator: Orchestrator) -> None:
-    """Start a Gradio Blocks app backed by the orchestrator."""
-
     def _apply_thresholds(drop: float, rise: float, volume: float) -> None:
         if drop is not None and drop > 0:
             settings.MAX_PERCENT_DROP = drop
